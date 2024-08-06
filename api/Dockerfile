@@ -2,19 +2,31 @@
 
 # Adapted from https://github.com/dunglas/symfony-docker
 
-
 # Versions
-FROM dunglas/frankenphp:1-php8.3 AS frankenphp_upstream
+FROM dunglas/frankenphp:latest-builder AS builder
+COPY --from=caddy:builder /usr/bin/xcaddy /usr/bin/xcaddy
 
 
-# The different stages of this Dockerfile are meant to be built into separate images
-# https://docs.docker.com/develop/develop-images/multistage-build/#stop-at-a-specific-build-stage
-# https://docs.docker.com/compose/compose-file/#target
+# Set environment variables for PIE
+ENV CGO_ENABLED=1
+ENV XCADDY_SETCAP=1
+ENV XCADDY_GO_BUILD_FLAGS="-ldflags \"-w -s -extldflags '-Wl,-z,stack-size=0x80000'\""
+ENV   CGO_CFLAGS="-fPIC" \
+     CGO_LDFLAGS="-pie" \
+     GOFLAGS="-buildmode=pie"
+RUN xcaddy build \
+    --output /usr/local/bin/frankenphp \
+    --with github.com/dunglas/frankenphp \
+    --with github.com/dunglas/frankenphp/caddy\
+    --with github.com/dunglas/mercure/caddy \
+    --with github.com/dunglas/vulcain/caddy \
+    --with github.com/caddyserver/cache-handler
+FROM dunglas/frankenphp:latest AS frankenphp_upstream
 
+COPY --from=builder --link /usr/local/bin/frankenphp /usr/local/bin/frankenphp
 
 # Base FrankenPHP image
 FROM frankenphp_upstream AS frankenphp_base
-
 WORKDIR /app
 
 # persistent / runtime deps
