@@ -20,7 +20,9 @@ RUN xcaddy build \
     --with github.com/dunglas/frankenphp/caddy\
     --with github.com/dunglas/mercure/caddy \
     --with github.com/dunglas/vulcain/caddy \
-    --with github.com/caddyserver/cache-handler
+    --with github.com/darkweak/souin/plugins/caddy@743a3a45f4f3d3509def3d2654c0a0eda1f49636 \
+    --with github.com/darkweak/souin@743a3a45f4f3d3509def3d2654c0a0eda1f49636
+
 FROM dunglas/frankenphp:latest AS frankenphp_upstream
 
 COPY --from=builder --link /usr/local/bin/frankenphp /usr/local/bin/frankenphp

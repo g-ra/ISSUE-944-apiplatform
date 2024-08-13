@@ -11,15 +11,21 @@
     order vulcain after reverse_proxy
     order php_server before file_server
 
-    servers {
-       metrics
-    }
+	servers {
+	   metrics
+	}
 
 	cache {
+		allowed_http_verbs GET
 		api {
+			prometheus
 			souin
 		}
-		mode bypass
+
+		timeout {
+			backend 10s
+			cache 10ms
+		}
 	}
 
     log {

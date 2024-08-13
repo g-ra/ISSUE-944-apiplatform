@@ -1,6 +1,7 @@
 api_platform:
     title: Hello API Platform
     version: 1.0.0
+    
     http_cache:
         invalidation:
             # We assume that your API can reach your caddy instance by the hostname http://caddy.
@@ -13,9 +14,9 @@ api_platform:
     mercure:
         include_type: true
     formats:
-        jsonld: ['application/ld+json']
+        json: ['application/json']
     docs_formats:
-        jsonld: ['application/ld+json']
+        json: ['application/json']
         jsonopenapi: ['application/vnd.openapi+json']
         html: ['text/html']
     # Good defaults for REST APIs
@@ -26,6 +27,15 @@ api_platform:
         extra_properties:
             standard_put: true
             rfc_7807_compliant_errors: true
+        pagination_enabled: false    
     # change this to true if you use controllers
     use_symfony_listeners: false
     keep_legacy_inflector: false
+
+    swagger:
+        api_keys:
+            JWT:
+                name: Authorization
+                type: header
+    eager_loading:
+        max_joins: 80
