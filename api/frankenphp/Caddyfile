@@ -15,7 +15,9 @@
 	   metrics
 	}
 
+
 	cache {
+		mode bypass
 		allowed_http_verbs GET
 		api {
 			prometheus
