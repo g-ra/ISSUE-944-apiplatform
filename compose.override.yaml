@@ -1,9 +1,13 @@
+
 # Development environment override
 services:
   php:
     build:
       context: ./api
       target: frankenphp_dev
+      args:
+        - XDEBUG_MODE=$XDEBUG_MODE
+        - SUPERVISOR_ENABLED=$SUPERVISOR_ENABLED
     volumes:
       - ./api:/app
       - /app/var
@@ -13,21 +17,36 @@ services:
       #  from the bind-mount for better performance by enabling the next line:
       #- /app/vendor
     environment:
-      MERCURE_EXTRA_DIRECTIVES: demo
+      MERCURE_EXTRA_DIRECTIVES: cors_origins https://stage.sales.odin.hwdev.ru http://localhost:3000
       # See https://xdebug.org/docs/all_settings#mode
       XDEBUG_MODE: "${XDEBUG_MODE:-off}"
+    ports:
+      # HTTP
+      - target: 80
+        published: ${HTTP_PORT:-81}
+        protocol: tcp
     extra_hosts:
       # Ensure that host.docker.internal is correctly defined on Linux
       - host.docker.internal:host-gateway
     tty: true
 
-###> doctrine/doctrine-bundle ###
+
   database:
     ports:
       - target: 5432
         published: 5432
         protocol: tcp
-###< doctrine/doctrine-bundle ###
+  
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - target: 6379
+        published: ${REDIS_PORT:-6379}
+        protocol: tcp
+    volumes:
+      - ./redis-data:/data
+    extra_hosts:
+      # Ensure that host.docker.internal is correctly defined on Linux
+      - host.docker.internal:host-gateway
 
-###> symfony/mercure-bundle ###
-###< symfony/mercure-bundle ###

@@ -2,43 +2,91 @@
     "type": "project",
     "license": "MIT",
     "require": {
-        "php": ">=8.2",
+        "php": ">=8.3",
+        "ext-amqp": "*",
         "ext-ctype": "*",
+        "ext-fileinfo": "*",
         "ext-iconv": "*",
         "api-platform/core": "^3.2",
+        "aws/aws-sdk-php": "^3.325",
+        "box/spout": "^3.3",
+        "brick/money": "0.8.*",
+        "cron/cron-bundle": "3.*",
+        "ddeboer/imap": "^1.19",
         "doctrine/doctrine-bundle": "^2.7",
         "doctrine/doctrine-migrations-bundle": "^3.2",
+        "doctrine/mongodb-odm": "^2.6.0",
+        "doctrine/mongodb-odm-bundle": "^5.3",
         "doctrine/orm": "^2.12",
+        "firebase/php-jwt": "*",
+        "gedmo/doctrine-extensions": "*",
+        "guzzlehttp/guzzle": "*",
+        "imagine/imagine": "^1.3",
+        "league/flysystem-aws-s3-v3": "^3.28",
+        "league/flysystem-bundle": "3.*",
+        "league/flysystem-memory": "^3.28",
+        "lexik/jwt-authentication-bundle": "^2.20",
+        "mongodb/mongodb": "^2.0",
+        "myclabs/php-enum": "^1.8",
+        "ncjoes/office-converter": "^1.0",
         "nelmio/cors-bundle": "^2.2",
-        "phpstan/phpdoc-parser": "^1.16",
+        "nesbot/carbon": "*",
+        "php-amqplib/php-amqplib": "^2.8",
+        "phpoffice/phpspreadsheet": "^2.0",
+        "phpoffice/phpword": "^1.2",
+        "phpstan/phpdoc-parser": "1.*",
+        "phptcloud/isdayoff-sdk": "^2.0",
+        "promphp/prometheus_client_php": "^2.13",
+        "ramsey/uuid-doctrine": "^2.0",
         "runtime/frankenphp-symfony": "^0.2",
-        "symfony/asset": "6.4.*",
-        "symfony/console": "6.4.*",
-        "symfony/dotenv": "6.4.*",
-        "symfony/expression-language": "6.4.*",
+        "sentry/sentry-symfony": "^5.0",
+        "soundasleep/html2text": "^2.1",
+        "stof/doctrine-extensions-bundle": "^1.8",
+        "symfony/amqp-messenger": "7.1",
+        "symfony/asset": "7.2.*",
+        "symfony/console": "7.2.*",
+        "symfony/doctrine-messenger": "7.2.*",
+        "symfony/dotenv": "7.2.*",
+        "symfony/expression-language": "7.2.*",
+        "symfony/filesystem": "7.*",
         "symfony/flex": "^2.2",
-        "symfony/framework-bundle": "6.4.*",
+        "symfony/framework-bundle": "7.2.*",
         "symfony/mercure-bundle": "^0.3.5",
+        "symfony/messenger": "7.1.*",
+        "symfony/mime": "7.2.*",
         "symfony/monolog-bundle": "^3.8",
-        "symfony/property-access": "6.4.*",
-        "symfony/property-info": "6.4.*",
-        "symfony/runtime": "6.4.*",
-        "symfony/security-bundle": "6.4.*",
-        "symfony/serializer": "6.4.*",
-        "symfony/twig-bundle": "6.4.*",
-        "symfony/validator": "6.4.*",
-        "symfony/yaml": "6.4.*"
+        "symfony/property-access": "7.2.*",
+        "symfony/property-info": "7.2.*",
+        "symfony/runtime": "7.2.*",
+        "symfony/security-bundle": "7.2.*",
+        "symfony/serializer": "7.2.*",
+        "symfony/string": "7.*",
+        "symfony/twig-bundle": "7.2.*",
+        "symfony/uid": "7.2.*",
+        "symfony/validator": "7.2.*",
+        "symfony/yaml": "7.2.*",
+        "zenstruck/foundry": "v2.0.7"
     },
     "require-dev": {
-        "api-platform/schema-generator": "^5.0",
-        "symfony/browser-kit": "6.4.*",
-        "symfony/css-selector": "6.4.*",
-        "symfony/debug-bundle": "6.4.*",
+        "brianium/paratest": "^7.4",
+        "dama/doctrine-test-bundle": "^8",
+        "doctrine/doctrine-fixtures-bundle": "*",
+        "friendsofphp/php-cs-fixer": "^3.47",
+        "justinrainbow/json-schema": "^5.2",
+        "phpstan/phpstan-doctrine": "^1.5",
+        "phpunit/phpunit": "^10",
+        "rector/rector": "*",
+        "symfony/browser-kit": "7.2.*",
+        "symfony/css-selector": "7.2.*",
+        "symfony/debug-bundle": "7.2.*",
         "symfony/maker-bundle": "^1.44",
-        "symfony/phpunit-bridge": "6.4.*",
-        "symfony/stopwatch": "6.4.*",
-        "symfony/var-dumper": "6.4.*",
-        "symfony/web-profiler-bundle": "6.4.*"
+        "symfony/panther": "^2.1",
+        "symfony/phpunit-bridge": "7.2.*",
+        "symfony/stopwatch": "7.2.*",
+        "symfony/var-dumper": "7.2.*",
+        "symfony/web-profiler-bundle": "7.2.*",
+        "symfony/cache": "6.*",
+        "zenstruck/browser": "^1.2"
     },
     "config": {
         "optimize-autoloader": true,
@@ -58,7 +106,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "App\\Tests\\": "tests/"
+            "Tests\\": "tests/"
         }
     },
     "replace": {
@@ -83,15 +131,29 @@
         ],
         "post-update-cmd": [
             "@auto-scripts"
+        ],
+        "rector-fix": "./vendor/bin/rector process src",
+        "csfix-fix": "PHP_CS_FIXER_IGNORE_ENV=1 ./vendor/bin/php-cs-fixer fix src --allow-risky=yes --using-cache=no --config .php-cs-fixer.dist.php",
+        "rector-validate": "./vendor/bin/rector process src --dry-run",
+        "csfix-validate" : "PHP_CS_FIXER_IGNORE_ENV=1 ./vendor/bin/php-cs-fixer fix src --dry-run --diff --config .php-cs-fixer.dist.php",
+        "phpstan-validate": "./vendor/bin/phpstan analyse src tests --memory-limit=1G",
+        "code-quality-fix": [
+            "@csfix-fix",
+            "@rector-fix"
+        ],
+        "code-quality-validate": [
+            "@csfix-validate",
+            "@rector-validate"
         ]
     },
     "conflict": {
-        "symfony/symfony": "*"
+        "symfony/symfony": "*",
+        "symfony/dependency-injection": "5.3.7"
     },
     "extra": {
         "symfony": {
             "allow-contrib": false,
-            "require": "6.4.*",
+            "require": "7.2.*",
             "docker": false
         }
     }

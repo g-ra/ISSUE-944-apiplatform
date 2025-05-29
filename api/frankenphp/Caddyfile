@@ -1,35 +1,52 @@
-# Caddyfile
 {
     {$CADDY_GLOBAL_OPTIONS}
 
     frankenphp {
-       {$FRANKENPHP_CONFIG}
+        {$FRANKENPHP_CONFIG}
     }
 
     # https://caddyserver.com/docs/caddyfile/directives#sorting-algorithm
     order mercure after encode
     order vulcain after reverse_proxy
     order php_server before file_server
+    order cache after try_files
 
     servers {
-       metrics
+        metrics
     }
 
-	cache {
-		api {
-			souin
-		}
-		mode bypass
-	}
+     cache {
+
+       cdn {
+         strategy hard
+       }
+
+
+
+     		redis {
+     			url redis:6379
+     		}
+            allowed_http_verbs GET
+            mode bypass
+            api {
+                prometheus
+                souin
+            }
+
+              timeout {
+                  backend 200s
+                  cache 200ms
+              }
+    }
 
     log {
-          output file /var/log/caddy/caddy_main.log {
-          roll_size 100MiB
-          roll_keep 5
-          roll_keep_for 100d
-       }
-       format json
-       level INFO
+        output file /var/log/caddy/caddy_main.log {
+            roll_size 100MiB
+            roll_keep 5
+            roll_keep_for 100d
+        }
+        format json
+        level INFO
     }
 
     admin 0.0.0.0:2019
@@ -39,34 +56,48 @@
 
 {$SERVER_NAME:localhost} {
     log {
-       # Redact the authorization query parameter that can be set by Mercure
-       format filter {
-          wrap console
-          fields {
-             uri query {
+        # Redact the authorization query parameter that can be set by Mercure
+        format filter {
+            request>uri query {
                 replace authorization REDACTED
-             }
-          }
-       }
+            }
+        }
     }
 
-	cache
+	@use_cache expression `
+          !path('/.well-known/mercure*') &&
+          !header({'Accept': 'text/event-stream'}) &&
+          !(header({'Connection': '*Upgrade*', 'Upgrade': 'websocket'})) &&
+		  !path('/users/info*') &&
+		  !path('/users/sections*') &&
+		  !path('/todos*')
+       `
+    cache @use_cache
+
     root * /app/public
-    encode zstd gzip
+    encode zstd br gzip
 
     mercure {
-       # Transport to use (default to Bolt)
-       transport_url {$MERCURE_TRANSPORT_URL:bolt:///data/mercure.db}
-       # Publisher JWT key
-       publisher_jwt {env.MERCURE_PUBLISHER_JWT_KEY} {env.MERCURE_PUBLISHER_JWT_ALG}
-       # Subscriber JWT key
-       subscriber_jwt {env.MERCURE_SUBSCRIBER_JWT_KEY} {env.MERCURE_SUBSCRIBER_JWT_ALG}
-       # Allow anonymous subscribers (double-check that it's what you want)
-       anonymous
-       # Enable the subscription API (double-check that it's what you want)
-       subscriptions
-       # Extra directives
-       {$MERCURE_EXTRA_DIRECTIVES}
+        # Transport to use (default to Bolt)
+        debug
+        allow_anonymous
+        transport_url {$MERCURE_TRANSPORT_URL:bolt:///data/mercure.db}
+        # Publisher JWT key
+        publisher_jwt {env.MERCURE_PUBLISHER_JWT_KEY} {env.MERCURE_PUBLISHER_JWT_ALG}
+        # Subscriber JWT key
+        subscriber_jwt {env.MERCURE_SUBSCRIBER_JWT_KEY} {env.MERCURE_SUBSCRIBER_JWT_ALG}
+        # Allow anonymous subscribers (double-check that it's what you want)
+        anonymous
+        # Enable the subscription API (double-check that it's what you want)
+        subscriptions
+        log {
+            format json
+            output stderr
+            level DEBUG
+        }
+        write_timeout 0s
+        # Extra directives
+        {$MERCURE_EXTRA_DIRECTIVES}
     }
 
     vulcain
@@ -78,14 +109,15 @@
 
     # Matches requests for HTML documents, for static files and for Next.js files,
     # except for known API paths and paths with extensions handled by API Platform
-    # @pwa expression `(
-    #     header({'Accept': '*text/html*'})
-    #     && !path(
-    #        '/docs*', '/graphql*', '/bundles*', '/contexts*', '/_profiler*', '/_wdt*',
-    #        '*.json*', '*.html', '*.csv', '*.yml', '*.yaml', '*.xml'
-    #     )
-    #  )
-    #  || path('/favicon.ico', '/manifest.json', '/robots.txt', '/_next*', '/sitemap*')`
+    #@pwa expression `(
+    # 		header({'Accept': '*text/html*'})
+    #		&& !path(
+    #			'/docs*', '/graphql*', '/bundles*', '/contexts*', '/_profiler*', '/_wdt*',
+    #			'*.json*', '*.html', '*.csv', '*.yml', '*.yaml', '*.xml'
+    #		)
+    #	)
+    #	|| path('/favicon.ico', '/manifest.json', '/robots.txt', '/sitemap*', '/_next*', '/__next*')
+    #	|| query({'_rsc': '*'})`
 
     # Comment the following line if you don't want Next.js to catch requests for HTML documents.
     # In this case, they will be handled by the PHP app.
@@ -98,4 +130,105 @@
     respond @blocked 403
 
     php_server
+
+	@no_cache path /users/sections /roles/*/sections /roles/*/sections/*/fields /rates /history-changes /customers/*/timeline /leads/*/timeline /cargos/*/tracks /cargos/*/cargo-items
+	header @no_cache Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0"
+
+
+     route /cargos/*/tracks {
+    	   cache {
+    		   regex {
+    			   exclude .+
+    		   }
+    	   }
+     }
+
+    route /cargos/*/cargo-items {
+		   cache {
+			   regex {
+				   exclude .+
+			   }
+		   }
+    }
+
+   route /roles/*/sections {
+	   cache {
+		   regex {
+			   exclude .+
+		   }
+	   }
+   }
+
+   route /users/sections {
+	   cache {
+		   regex {
+			   exclude .+
+		   }
+	   }
+   }
+
+   route /roles/*/sections/*/fields {
+	   cache {
+		   regex {
+			   exclude .+
+		   }
+	   }
+   }
+
+   route /rates {
+	   cache {
+		   regex {
+			   exclude .+
+		   }
+	   }
+   }
+
+   route /history-changes {
+	   cache {
+		   regex {
+			   exclude .+
+		   }
+	   }
+   }
+
+   route /customers/*/timeline {
+	   cache {
+		   regex {
+			   exclude .+
+		   }
+	   }
+   }
+
+   route /leads/*/timeline {
+	   cache {
+		   regex {
+			   exclude .+
+		   }
+	   }
+   }
+
+    route /docs {
+   	   cache {
+   		   regex {
+   			   exclude .+
+   		   }
+   	   }
+    }
+
+	route /rates/max {
+		  cache {
+			  regex {
+				  exclude .+
+			  }
+		  }
+	}
+
+	route /contract-option-groups {
+		cache {
+			regex {
+				exclude .+
+			}
+    	}
+	}
+
 }

@@ -1,0 +1,12 @@
+# worker {
+# 	file ./public/index.php
+# 	env APP_RUNTIME Runtime\FrankenPhpSymfony\Runtime
+# 	num 10
+# }
+php_server {
+    num_threads 20
+    file_server off
+}
+php {
+    num_threads 20
+}
