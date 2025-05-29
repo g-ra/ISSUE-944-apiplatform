@@ -13,6 +13,7 @@
         "brick/money": "0.8.*",
         "cron/cron-bundle": "3.*",
         "ddeboer/imap": "^1.19",
+        "gesdinet/jwt-refresh-token-bundle": "^1.3",
         "doctrine/doctrine-bundle": "^2.7",
         "doctrine/doctrine-migrations-bundle": "^3.2",
         "doctrine/mongodb-odm": "^2.6.0",
