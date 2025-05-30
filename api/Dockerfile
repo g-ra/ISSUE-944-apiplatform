@@ -15,6 +15,7 @@ ENV CGO_ENABLED=1 XCADDY_SETCAP=1 XCADDY_GO_BUILD_FLAGS="-ldflags \"-w -s -extld
 ENV CGO_CFLAGS="-fPIC" \
     CGO_LDFLAGS="-pie" \
     GOFLAGS="-buildmode=pie"
+
 RUN xcaddy build \
     --output /usr/local/bin/frankenphp \
     --with github.com/dunglas/frankenphp/caddy \
@@ -27,7 +28,8 @@ RUN xcaddy build \
     # Or use the following lines instead of the cache-handler one for the latest improvements
     #--with github.com/darkweak/souin/plugins/caddy \
     #--with github.com/darkweak/storages/otter/caddy
-	--with github.com/darkweak/souin/plugins/caddy \
+	--with github.com/darkweak/souin/plugins/caddy@36d876ffb2b82cb42a7b45d094f9a41f0692017d \
+	--with github.com/darkweak/souin@36d876ffb2b82cb42a7b45d094f9a41f0692017d \
     --with github.com/darkweak/storages/redis/caddy
 # Versions
 FROM dunglas/frankenphp:1-php8.3 AS frankenphp_upstream

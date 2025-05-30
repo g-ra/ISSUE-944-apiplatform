@@ -40,13 +40,13 @@ services:
   redis:
     image: redis:7-alpine
     container_name: redis
-    ports:
-      - target: 6379
-        published: ${REDIS_PORT:-6379}
-        protocol: tcp
     volumes:
       - ./redis-data:/data
     extra_hosts:
       # Ensure that host.docker.internal is correctly defined on Linux
       - host.docker.internal:host-gateway
-
+    ports:
+      - target: 6379
+        published: ${REDIS_PORT:-6379}
+        protocol: tcp
+      

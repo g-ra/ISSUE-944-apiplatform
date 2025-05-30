@@ -2,7 +2,10 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Serializer\Filter\PropertyFilter;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -11,6 +14,10 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 #[ApiResource(mercure: true)]
 #[ORM\Entity]
+#[ApiFilter(PropertyFilter::class, arguments: ['parameterName' => 'fields', 'overrideDefaultProperties' => false])]
+#[ApiFilter(SearchFilter::class, properties: [
+    'name' => 'exact'
+])]
 class Greeting
 {
     /**
